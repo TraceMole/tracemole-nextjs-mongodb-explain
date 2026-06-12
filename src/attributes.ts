@@ -13,7 +13,10 @@ export const MONGO_EXPLAIN_ATTR = {
   indexUsed: `${MONGO_EXPLAIN_PREFIX}.index_used`,
   indexName: `${MONGO_EXPLAIN_PREFIX}.index_name`,
   stage: `${MONGO_EXPLAIN_PREFIX}.stage`,
+  scanType: `${MONGO_EXPLAIN_PREFIX}.scan_type`,
 } as const;
+
+export type MongoExplainAttributeKey = keyof typeof MONGO_EXPLAIN_ATTR;
 
 export type MongoExplainAttributeValue = string | number | boolean;
 
@@ -28,6 +31,7 @@ export function explainAttributes(
     [MONGO_EXPLAIN_ATTR.executionTimeMs]: stats.executionTimeMs,
     [MONGO_EXPLAIN_ATTR.indexUsed]: stats.indexUsed,
     [MONGO_EXPLAIN_ATTR.stage]: stats.stage,
+    [MONGO_EXPLAIN_ATTR.scanType]: stats.scanType,
   };
 
   if (stats.collection) attrs[MONGO_EXPLAIN_ATTR.collection] = stats.collection;
@@ -50,6 +54,18 @@ export function readExplainFromAttributes(
   const stage = attributes[MONGO_EXPLAIN_ATTR.stage];
   const collection = attributes[MONGO_EXPLAIN_ATTR.collection];
   const indexName = attributes[MONGO_EXPLAIN_ATTR.indexName];
+  const scanType = attributes[MONGO_EXPLAIN_ATTR.scanType];
+
+  const indexUsedValue = indexUsed === true || indexUsed === "true";
+  const stageValue = typeof stage === "string" ? stage : "unknown";
+  const scanTypeValue =
+    scanType === "index" || scanType === "collection" || scanType === "other"
+      ? scanType
+      : indexUsedValue
+        ? "index"
+        : stageValue === "COLLSCAN"
+          ? "collection"
+          : "other";
 
   return {
     operation,
@@ -61,15 +77,10 @@ export function readExplainFromAttributes(
       typeof executionTimeMs === "number"
         ? executionTimeMs
         : Number(executionTimeMs ?? 0),
-    indexUsed: indexUsed === true || indexUsed === "true",
+    indexUsed: indexUsedValue,
     indexName: typeof indexName === "string" ? indexName : undefined,
-    stage: typeof stage === "string" ? stage : "unknown",
-    scanType:
-      indexUsed === true || indexUsed === "true"
-        ? "index"
-        : stage === "COLLSCAN"
-          ? "collection"
-          : "other",
+    stage: stageValue,
+    scanType: scanTypeValue,
   };
 }
 

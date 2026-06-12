@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   target: "node18",
-  external: ["@opentelemetry/api"],
+  external: ["@opentelemetry/api", "mongodb"],
 });
