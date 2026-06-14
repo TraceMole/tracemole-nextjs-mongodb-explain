@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { describe, it, mock } from "node:test";
-import { trace } from "@opentelemetry/api";
+import { context, trace } from "@opentelemetry/api";
 import type { CommandStartedEvent, CommandSucceededEvent, MongoClient } from "mongodb";
 import {
   registerTraceMoleListener,
@@ -86,13 +86,36 @@ describe("registerTraceMoleListener", () => {
 
   it("explains slow queries with the stored command", async () => {
     const { client, commandCalls } = createMockClient();
-    const setAttributes = mock.fn();
-    const span = trace.getTracer("test").startSpan("mongo.find");
-    mock.method(span, "setAttributes", setAttributes);
-
     registerTraceMoleListener(client, { slowThreshold: 100, sampleRate: 1, enabled: true });
 
-    mock.method(trace, "getActiveSpan", () => span);
+    const tracer = trace.getTracer("test");
+    await tracer.startActiveSpan("request", async (requestSpan) => {
+      emitStarted(client, {
+        command: {
+          find: "users",
+          filter: { status: "active" },
+          $db: "app",
+          lsid: { id: "abc" },
+          apiVersion: "1",
+        },
+      });
+      emitSucceeded(client, { duration: 150 });
+      requestSpan.end();
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    assert.equal(commandCalls.length, 1);
+    assert.deepEqual((commandCalls[0] as { explain: unknown }).explain, {
+      find: "users",
+      filter: { status: "active" },
+    });
+    unregisterTraceMoleListener(client);
+  });
+
+  it("explains slow queries without an active span", async () => {
+    const { client, commandCalls } = createMockClient();
+    registerTraceMoleListener(client, { slowThreshold: 100, sampleRate: 1, enabled: true });
 
     emitStarted(client, {
       command: { find: "users", filter: { status: "active" } },
@@ -102,13 +125,7 @@ describe("registerTraceMoleListener", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     assert.equal(commandCalls.length, 1);
-    assert.deepEqual((commandCalls[0] as { explain: unknown }).explain, {
-      find: "users",
-      filter: { status: "active" },
-    });
-    assert.equal(setAttributes.mock.calls.length, 1);
     unregisterTraceMoleListener(client);
-    span.end();
   });
 
   it("skips system commands", async () => {

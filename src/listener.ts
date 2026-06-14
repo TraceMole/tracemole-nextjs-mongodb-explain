@@ -1,4 +1,4 @@
-import { trace, type Span } from "@opentelemetry/api";
+import { context, trace, type Context } from "@opentelemetry/api";
 import type {
   CommandFailedEvent,
   CommandStartedEvent,
@@ -23,7 +23,8 @@ export interface TraceMoleListenerOptions {
 type PendingCommand = {
   command: Document;
   databaseName: string;
-  span: Span | undefined;
+  /** OTel context captured while the query is in-flight (still on the request trace). */
+  parentContext: Context;
 };
 
 type ResolvedListenerOptions = {
@@ -70,6 +71,30 @@ type ListenerState = {
 
 const registeredClients = new WeakMap<MongoClient, ListenerState>();
 
+const LISTENER_TRACER_NAME = "tracemole.mongo";
+
+/** Driver/session fields on commandStarted payloads break db.command({ explain }). */
+const COMMAND_METADATA_KEYS = [
+  "$db",
+  "$clusterTime",
+  "$readPreference",
+  "lsid",
+  "apiVersion",
+  "apiStrict",
+  "apiDeprecationErrors",
+  "$comment",
+  "txnNumber",
+  "autocommit",
+] as const;
+
+export function sanitizeCommandForExplain(command: Document): Document {
+  const sanitized = { ...command };
+  for (const key of COMMAND_METADATA_KEYS) {
+    delete sanitized[key];
+  }
+  return sanitized;
+}
+
 function shouldSample(sampleRate: number): boolean {
   return Math.random() <= sampleRate;
 }
@@ -77,19 +102,28 @@ function shouldSample(sampleRate: number): boolean {
 async function runExplainForCommand(
   client: MongoClient,
   pending: PendingCommand,
+  commandName: string,
 ): Promise<void> {
-  const { span, command, databaseName } = pending;
-  if (!span) return;
+  const tracer = trace.getTracer(LISTENER_TRACER_NAME);
+  const { command, databaseName, parentContext } = pending;
 
-  const db = client.db(databaseName);
-  const explainResult = await runWithoutTracing(() =>
-    db.command({
-      explain: command,
-      verbosity: "executionStats",
-    }),
-  );
-  const stats = parseExplainStats(explainResult);
-  attachExplainToSpan(span, stats);
+  await context.with(parentContext, async () => {
+    await tracer.startActiveSpan(`mongodb.${commandName}`, async (span) => {
+      try {
+        const db = client.db(databaseName);
+        const explainResult = await runWithoutTracing(() =>
+          db.command({
+            explain: sanitizeCommandForExplain(command),
+            verbosity: "executionStats",
+          }),
+        );
+        const stats = parseExplainStats(explainResult);
+        attachExplainToSpan(span, stats);
+      } finally {
+        span.end();
+      }
+    });
+  });
 }
 
 function handleCommandSucceeded(
@@ -106,9 +140,8 @@ function handleCommandSucceeded(
   if (!isExplainEnabled(state.options.enabled)) return;
   if (event.duration < state.options.slowThreshold) return;
   if (!shouldSample(state.options.sampleRate)) return;
-  if (!pending.span) return;
 
-  void runExplainForCommand(client, pending).catch(() => {
+  void runExplainForCommand(client, pending, event.commandName).catch(() => {
     // Explain is best-effort for local profiling.
   });
 }
@@ -133,7 +166,7 @@ function createListenerState(
     pending.set(event.requestId, {
       command: event.command,
       databaseName: event.databaseName,
-      span: trace.getActiveSpan(),
+      parentContext: context.active(),
     });
   };
 
