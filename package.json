@@ -1,10 +1,14 @@
 {
   "name": "@tracemole/nextjs-mongodb-explain",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Attach MongoDB executionStats explain plans to OpenTelemetry spans for Next.js and Node apps",
   "license": "Apache-2.0",
   "type": "module",
-  "files": ["dist", "LICENSE", "README.md"],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "keywords": [
     "mongodb",
     "explain",
@@ -28,39 +32,50 @@
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
-      "client": ["dist/client.d.ts"],
-      "*": ["dist/index.d.ts"]
+      "client": [
+        "dist/client.d.ts"
+      ],
+      "*": [
+        "dist/index.d.ts"
+      ]
     }
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./client": {
       "types": "./dist/client.d.ts",
-      "import": "./dist/client.js"
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
     }
   },
   "scripts": {
     "build": "tsup",
     "prepare": "npm run build",
     "check-types": "tsc --noEmit",
-    "test": "tsx --test src/parse.test.ts",
+    "test": "tsx --test src/**/*.test.ts",
     "prepublishOnly": "npm run check-types && npm run test && npm run build"
   },
   "peerDependencies": {
-    "@opentelemetry/api": ">=1.9.0"
+    "@opentelemetry/api": ">=1.9.0",
+    "mongodb": ">=6.0.0"
   },
   "peerDependenciesMeta": {
     "@opentelemetry/api": {
+      "optional": true
+    },
+    "mongodb": {
       "optional": true
     }
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",
     "@types/node": "^22.15.3",
-    "tsup": "^8.5.0",
+    "mongodb": "^6.16.0",
+    "tsup": "^6.5.0",
     "tsx": "^4.19.4",
     "typescript": "5.9.2"
   },

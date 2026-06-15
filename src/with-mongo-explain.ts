@@ -1,4 +1,5 @@
 import { attachExplainToSpan } from "./attach";
+import { isExplainEnabled } from "./enabled";
 import { parseExplainStats } from "./parse";
 import { runWithoutTracing } from "./suppress-tracing";
 
@@ -12,11 +13,6 @@ export type WithMongoExplainOptions<T> = {
   /** Optional span label shown in the dashboard (e.g. "events aggregate"). */
   label?: string;
 };
-
-function isExplainEnabled(explicit?: boolean): boolean {
-  if (explicit != null) return explicit;
-  return process.env.TRACE_MOLE_MONGO_EXPLAIN !== "0";
-}
 
 /**
  * Run a MongoDB operation and attach executionStats from a parallel explain call

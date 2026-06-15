@@ -6,5 +6,5 @@ export {
   hasMongoExplainAttributes,
   readExplainFromAttributes,
 } from "./attributes";
-export type { MongoExplainAttributeValue } from "./attributes";
+export type { MongoExplainAttributeKey, MongoExplainAttributeValue } from "./attributes";
 export type { MongoExplainStats } from "./types";
