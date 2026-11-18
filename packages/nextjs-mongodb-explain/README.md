@@ -1,5 +1,7 @@
 # @tracemole/nextjs-mongodb-explain
 
+> **Using Next.js?** [`@tracemole/next`](../next) sets up OpenTelemetry and this package for you in two lines, with no changes to your MongoDB code.
+
 Attach `executionStats` from MongoDB explain queries to your OpenTelemetry spans. This allows APM dashboards (such as TraceMole) to render database execution plans, highlighting index usage, document scan ratios, and collection scan warnings in query waterfalls.
 
 ## Installation
