@@ -3,9 +3,10 @@
 # version is not on npm yet. Needs the NPM_TOKEN repo secret (npm automation token).
 name: Release
 
+# Manual only for now: releases are published from a maintainer's machine.
+# To automate later, add `push: branches: [main]` back and the NPM_TOKEN secret.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency: release-${{ github.ref }}
 

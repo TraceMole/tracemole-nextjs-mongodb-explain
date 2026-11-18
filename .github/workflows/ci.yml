@@ -18,6 +18,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Builds first: @tracemole/next type-checks against the explain package's dist types.
       - run: npm run check-types
       - run: npm test
-      - run: npm run build
