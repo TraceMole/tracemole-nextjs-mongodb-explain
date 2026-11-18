@@ -1,0 +1,75 @@
+{
+  "name": "@tracemole/next",
+  "version": "0.1.0",
+  "description": "Two-line OpenTelemetry + MongoDB explain setup for Next.js, sending traces to TraceMole (or any OTLP backend)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "nextjs",
+    "opentelemetry",
+    "mongodb",
+    "mongoose",
+    "explain",
+    "tracing",
+    "apm",
+    "tracemole"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TraceMole/tracemole-nextjs-mongodb-explain.git",
+    "directory": "packages/next"
+  },
+  "bugs": {
+    "url": "https://github.com/TraceMole/tracemole-nextjs-mongodb-explain/issues"
+  },
+  "homepage": "https://github.com/TraceMole/tracemole-nextjs-mongodb-explain/tree/main/packages/next#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "prepublishOnly": "npm run check-types && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.301.2",
+    "@opentelemetry/instrumentation": "^0.301.2",
+    "@opentelemetry/instrumentation-http": "^0.301.2",
+    "@opentelemetry/instrumentation-mongodb": "^0.78.0",
+    "@opentelemetry/instrumentation-mongoose": "^0.71.0",
+    "@opentelemetry/instrumentation-undici": "^0.35.1",
+    "@opentelemetry/resources": "^3.1.1",
+    "@opentelemetry/sdk-node": "^0.301.2",
+    "@opentelemetry/sdk-trace": "^3.1.1",
+    "@tracemole/nextjs-mongodb-explain": "^1.1.0"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "mongodb": "^6.16.0"
+  },
+  "engines": {
+    "node": ">=22.15.0"
+  }
+}

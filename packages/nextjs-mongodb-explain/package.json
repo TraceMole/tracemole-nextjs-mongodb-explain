@@ -1,0 +1,89 @@
+{
+  "name": "@tracemole/nextjs-mongodb-explain",
+  "version": "1.1.0",
+  "description": "Attach MongoDB executionStats explain plans to OpenTelemetry spans for Next.js and Node apps",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "mongodb",
+    "explain",
+    "opentelemetry",
+    "nextjs",
+    "tracing",
+    "apm",
+    "tracemole"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TraceMole/tracemole-nextjs-mongodb-explain.git",
+    "directory": "packages/nextjs-mongodb-explain"
+  },
+  "bugs": {
+    "url": "https://github.com/TraceMole/tracemole-nextjs-mongodb-explain/issues"
+  },
+  "homepage": "https://github.com/TraceMole/tracemole-nextjs-mongodb-explain/tree/main/packages/nextjs-mongodb-explain#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "client": [
+        "dist/client.d.ts"
+      ],
+      "listener": [
+        "dist/listener.d.ts"
+      ],
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
+    },
+    "./listener": {
+      "types": "./dist/listener.d.ts",
+      "import": "./dist/listener.js",
+      "default": "./dist/listener.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "prepublishOnly": "npm run check-types && npm run test && npm run build"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": ">=1.9.0",
+    "mongodb": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "mongodb": "^6.16.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
